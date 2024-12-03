@@ -4,61 +4,54 @@ using System.Text;
 
 namespace ServerApp
 {
-    class ClientProcessor
+    public class ClientHandler
     {
-        private TcpClient _connection;
-        private NetworkStream _dataStream;
+        private TcpClient _client;
+        private NetworkStream _stream;
 
-        public ClientProcessor(TcpClient clientSocket)
+        public ClientHandler(TcpClient client)
         {
-            _connection = clientSocket;
-            _dataStream = _connection.GetStream();
+            _client = client;
+            _stream = _client.GetStream();
         }
 
-        public void ProcessClient()
+        public void HandleSession()
         {
             try
             {
-                byte[] buffer = new byte[1024];
+                var buffer = new byte[1024];
                 int bytesRead;
 
-                while ((bytesRead = _dataStream.Read(buffer, 0, buffer.Length)) > 0)
+                while ((bytesRead = _stream.Read(buffer, 0, buffer.Length)) > 0)
                 {
-                    string clientMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Console.WriteLine($"Client sent: {clientMessage}");
+                    var receivedMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    Console.WriteLine($"Message from client: {receivedMessage}");
 
-                    
-                    switch (clientMessage.Trim().ToLower())
+                    if (receivedMessage.Trim().Equals("!quit", StringComparison.OrdinalIgnoreCase))
                     {
-                        case "!quit":
-                            Console.WriteLine("Client requested termination. Closing session...");
-                            bytesRead = 0; 
-                            break;
+                        Console.WriteLine("Client has requested to end the session.");
+                        break;
+                    }
 
-                        default:
-                            Console.Write("Reply to Client: ");
-                            string serverReply = Console.ReadLine();
-                            byte[] replyData = Encoding.UTF8.GetBytes(serverReply);
-                            _dataStream.Write(replyData, 0, replyData.Length);
+                    Console.Write("Server response: ");
+                    string response = Console.ReadLine();
+                    var responseData = Encoding.UTF8.GetBytes(response);
+                    _stream.Write(responseData, 0, responseData.Length);
 
-                            switch (serverReply.Trim().ToLower())
-                            {
-                                case "!quit":
-                                    Console.WriteLine("Shutting down...");
-                                    bytesRead = 0; 
-                                    break;
-                            }
-                            break;
+                    if (response.Trim().Equals("!quit", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Console.WriteLine("Server is terminating the session.");
+                        break;
                     }
                 }
             }
-            catch (Exception error)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Error occurred: {error.Message}");
+                Console.WriteLine($"Session error: {ex.Message}");
             }
             finally
             {
-                _connection.Close();
+                _client?.Close();
             }
         }
     }

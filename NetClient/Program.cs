@@ -9,23 +9,26 @@ namespace NetworkClient
         {
             Console.InputEncoding = Console.OutputEncoding = Encoding.UTF8;
 
-            Console.WriteLine("//-- CLIENT PROGRAM --\\\\" + "\n");
+            Console.WriteLine("\\-- CLIENT APPLICATION --\\\n");
 
             Console.Write("Enter server IP: ");
-            string serverIp = Console.ReadLine(); // Example: 127.0.0.1
+            string ip = Console.ReadLine();
 
             Console.Write("Enter server port: ");
-            string serverPort = Console.ReadLine(); // Example: 8080
+            if (!int.TryParse(Console.ReadLine(), out int port))
+            {
+                Console.WriteLine("Invalid port number");
+                return;
+            }
 
             try
             {
-                var client = new ConnectionClient(serverIp, int.Parse(serverPort));
-
-                client.Run();
+                var client = new ConnectionClient(ip, port);
+                client.Execute();
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Error encountered: {exception.Message}");
+                Console.WriteLine($"Error: {ex.Message}");
             }
         }
     }

@@ -6,52 +6,52 @@ namespace NetworkClient
 {
     public class ConnectionClient
     {
-        private readonly TcpClient _tcpClient;
-        private readonly NetworkStream _networkStream;
+        private TcpClient _client;
+        private NetworkStream _stream;
 
-        public ConnectionClient(string serverAddress, int serverPort)
+        public ConnectionClient(string serverIp, int serverPort)
         {
-            _tcpClient = new TcpClient(serverAddress, serverPort);
-            _networkStream = _tcpClient.GetStream();
-            Console.WriteLine($"Successfully connected to the server at {serverAddress}:{serverPort}");
+            _client = new TcpClient(serverIp, serverPort);
+            _stream = _client.GetStream();
+            Console.WriteLine($"Connected to server at {serverIp}:{serverPort}");
         }
 
-        public void Run()
+        public void Execute()
         {
             try
             {
                 while (true)
                 {
-                    Console.Write("Message to send: ");
-                    string inputMessage = Console.ReadLine();
+                    Console.Write("Enter message: ");
+                    string message = Console.ReadLine();
 
-                    if (inputMessage.Equals("exit", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(message, "exit", StringComparison.OrdinalIgnoreCase))
                         break;
 
-                    byte[] outgoingData = Encoding.UTF8.GetBytes(inputMessage);
-                    _networkStream.Write(outgoingData, 0, outgoingData.Length);
+                    var buffer = Encoding.UTF8.GetBytes(message);
+                    _stream.Write(buffer, 0, buffer.Length);
 
-                    byte[] buffer = new byte[1024];
-                    int receivedBytes = _networkStream.Read(buffer, 0, buffer.Length);
-                    string serverResponse = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-                    Console.WriteLine($"Response from server: {serverResponse}");
+                    var responseBuffer = new byte[1024];
+                    int bytesRead = _stream.Read(responseBuffer, 0, responseBuffer.Length);
+                    var serverReply = Encoding.UTF8.GetString(responseBuffer, 0, bytesRead);
+                    Console.WriteLine($"Server response: {serverReply}");
                 }
             }
-            catch (Exception error)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Communication error: {error.Message}");
+                Console.WriteLine($"Error in communication: {ex.Message}");
             }
             finally
             {
-                Disconnect();
+                CloseConnection();
             }
         }
 
-        public void Disconnect()
+        private void CloseConnection()
         {
-            _networkStream?.Close();
-            _tcpClient?.Close();
-            Console.WriteLine("Disconnected from server.");
+            _stream?.Close();
+            _client?.Close();
+            Console.WriteLine("Connection closed.");
         }
     }
 }

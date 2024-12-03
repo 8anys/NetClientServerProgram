@@ -3,7 +3,7 @@ using System.Net.Sockets;
 
 namespace ServerApp
 {
-    class NetworkServer
+    public class NetworkServer
     {
         private TcpListener _tcpListener;
 
@@ -12,26 +12,19 @@ namespace ServerApp
             _tcpListener = new TcpListener(IPAddress.Parse(hostAddress), listeningPort);
         }
 
-        public void Launch()
+        public void Start()
         {
-            try
-            {
-                _tcpListener.Start();
-                Console.WriteLine("Server is now operational...\n");
+            _tcpListener.Start();
+        }
 
-                while (true)
-                {
-                    using (var clientSocket = _tcpListener.AcceptTcpClient())
-                    {
-                        var processor = new ClientProcessor(clientSocket);
-                        processor.ProcessClient();
-                    }
-                }
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine($"Error: {exception.Message}");
-            }
+        public TcpClient AcceptTcpClient()
+        {
+            return _tcpListener.AcceptTcpClient();
+        }
+
+        public void Stop()
+        {
+            _tcpListener.Stop();
         }
     }
 }
